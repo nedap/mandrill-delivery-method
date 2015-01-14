@@ -4,7 +4,7 @@ module Mail
     def initialize values
       settings = values.dup
       api_key  = settings.delete(:api_key)
-      @client  = MandrillRails::Client.new(api_key, settings)
+      @client  = MandrillDeliveryMethod::Client.new(api_key, settings)
     end
 
     def deliver! mail

@@ -1,4 +1,4 @@
-module MandrillRails
+module MandrillDeliveryMethod
   class Client
 
     def initialize api_key, settings = nil
