@@ -8,7 +8,7 @@ Adds Mandrill as a `delivery_method` for ActionMailer. Depends on Rails.
 Add this line to your application's Gemfile:
 
 ```
-gem 'mandrill-delivery-method', git: 'nedap/mandrill-delivery-method'
+gem 'mandrill-delivery-method'
 ```
 
 And then execute:
@@ -31,7 +31,7 @@ config.action_mailer.mandrill_settings = {
 That's it. ActionMailer will now use `mandrill-delivery-method` for e-mail delivery.
 
 # Contributing
-This gem is extremely basic, and can be much extended with features. Whenever you're using Mandrill as a delivery method in your Rails app and need more features than this gem offers, we invite you to contribute! Contributing it easy:
+This gem is extremely basic, and can be much extended with features. Whenever you're using Mandrill as a delivery method in your Rails app and need more features than this gem offers, we invite you to contribute! Contributing is easy:
 
 1. Fork it!
 2. Create your feature branch: `git checkout -b my-new-feature`
