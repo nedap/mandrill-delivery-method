@@ -36,7 +36,7 @@ describe MandrillDeliveryMethod::Client do
 
       it "makes a proper API call" do
         stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send.json").
-          with(body: "{\"message\":{\"from_email\":\"sender@host.tld\",\"from_name\":\"Sender Host\",\"to\":[{\"email\":\"lucky@receiver.tld\"}],\"subject\":\"Plain text e-mail\",\"tag\":\"some_tag\",\"headers\":{\"some_header\":\"some_header_value\",\"reply-to\":\"reply@to.tld\"},\"text\":\"Here goes the text.\",\"html\":\"Here goes the html.\"},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}").
+          with(body: "{\"message\":{\"from_email\":\"sender@host.tld\",\"from_name\":\"Sender Host\",\"to\":[{\"email\":\"lucky@receiver.tld\"}],\"subject\":\"Plain text e-mail\",\"tags\":[\"some_tag\"],\"headers\":{\"some_header\":\"some_header_value\",\"reply-to\":\"reply@to.tld\"},\"text\":\"Here goes the text.\",\"html\":\"Here goes the html.\"},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}").
           to_return(status: 200, body: "{\"status\":\"sent\"}", headers: {})
 
         result = client.deliver(mail)
@@ -55,7 +55,7 @@ describe MandrillDeliveryMethod::Client do
         mail.expect :to, "some@email.tld"
 
         stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send.json").
-          with(body: "{\"message\":{\"from_email\":\"sender@host.tld\",\"from_name\":\"Sender Host\",\"to\":[{\"email\":\"lucky@receiver.tld\"}],\"subject\":\"Cozy e-mail\",\"tag\":\"some_tag\",\"headers\":{\"some_header\":\"some_header_value\",\"reply-to\":\"reply@to.tld\"},\"text\":\"mail body\"},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}").
+          with(body: "{\"message\":{\"from_email\":\"sender@host.tld\",\"from_name\":\"Sender Host\",\"to\":[{\"email\":\"lucky@receiver.tld\"}],\"subject\":\"Cozy e-mail\",\"tags\":[\"some_tag\"],\"headers\":{\"some_header\":\"some_header_value\",\"reply-to\":\"reply@to.tld\"},\"text\":\"mail body\"},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}").
           to_return(status: 200, body: "{\"status\":\"sent\"}", headers: {})
 
         result = client.deliver(mail)

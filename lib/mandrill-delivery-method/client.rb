@@ -25,7 +25,7 @@ module MandrillDeliveryMethod
         'from_name'  => mail['from_name'].to_s,
         'to'         => [ { 'email' => mail['to'].to_s } ],
         'subject'    => mail.subject,
-        'tag'        => mail['tag'].to_s,
+        'tags'       => Array(mail['tag'].to_s).delete_if(&:empty?),
         'headers'    => delete_blank_fields(mail.headers.merge({
           'reply-to' => mail['reply_to'].to_s
         }))
