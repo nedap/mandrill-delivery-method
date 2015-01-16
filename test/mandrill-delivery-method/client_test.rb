@@ -5,63 +5,87 @@ describe MandrillDeliveryMethod::Client do
   describe "#deliver" do
 
     let(:client) { MandrillDeliveryMethod::Client.new('apikey', {setting: 'value'}) }
-    let(:mail) { Minitest::Mock.new }
 
-    before do
-      mail.expect :ready_to_send!,  true
-      mail.expect :headers,         { some_header: 'some_header_value' }
-      mail.expect :[],              "sender@host.tld",     ["from"]
-      mail.expect :[],              "Sender Host",         ["from_name"]
-      mail.expect :[],              "lucky@receiver.tld",  ["to"]
-      mail.expect :[],              "some_tag",            ["tag"]
-      mail.expect :[],              "reply@to.tld",        ["reply_to"]
-      mail.expect :body,            "mail body"
+    it "includes tags assigned to e-mails" do
+      mail = Mail.new do
+        from "some@sender.tld"
+        to "lucky@received.tld"
+        subject "a subject"
+      end.tap do |mail|
+        mail['tag'] = "some_tag"
+      end
+
+      stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send.json").
+        with(:body => "{\"message\":{\"from_email\":\"some@sender.tld\",\"to\":[{\"email\":\"lucky@received.tld\",\"type\":\"to\"}],\"subject\":\"a subject\",\"tags\":[\"some_tag\"]},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}",
+             :headers => {'Content-Type'=>'application/json', 'Host'=>'mandrillapp.com:443', 'User-Agent'=>'excon/0.43.0'}).
+        to_return(:status => 200, :body => {status:"sent"}.to_json, :headers => {})
+
+      result = client.deliver(mail)
+      assert_instance_of Hash, result
+      assert_equal "sent", result["status"]
     end
 
-    it "refuses to send if there is no recipient" do
-      mail.expect :to, ""
-      assert_raises RuntimeError do
-        client.deliver(mail)
+    it "sends the proper API call for text-only e-mails" do
+      mail = Mail.new do
+        from    "some@sender.tld"
+        to      "luck@receiver.tld"
+        subject "only text mail"
+        body    "just plain text body"
       end
+
+      stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send.json").
+        with(:body => "{\"message\":{\"from_email\":\"some@sender.tld\",\"to\":[{\"email\":\"luck@receiver.tld\",\"type\":\"to\"}],\"subject\":\"only text mail\",\"text\":\"just plain text body\"},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}",
+             :headers => {'Content-Type'=>'application/json', 'Host'=>'mandrillapp.com:443', 'User-Agent'=>'excon/0.43.0'}).
+        to_return(:status => 200, :body => {status:"sent"}.to_json, :headers => {})
+
+      result = client.deliver(mail)
+      assert_instance_of Hash, result
+      assert_equal "sent", result["status"]
     end
 
-    describe "multipart e-mail" do
-      before do
-        mail.expect :subject,    "Plain text e-mail"
-        mail.expect :multipart?, true
-        mail.expect :to,         "plain@mail.tld"
-        mail.expect :text_part,  "Content-Type: text/plain\r\n\r\n\r\nHere goes the text."
-        mail.expect :html_part,  "Content-Type: text/plain\r\n\r\n\r\nHere goes the html."
+    it "sends the proper API call for html-only e-mails" do
+      mail = Mail.new do
+        from    "some@sender.tld"
+        to      "luck@receiver.tld"
+        subject "only html mail"
+        html_part do
+          content_type 'text/html; charset=UTF-8'
+          "<html><head></head><body>This is HTML.</body></html>"
+        end
       end
 
-      it "makes a proper API call" do
-        stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send.json").
-          with(body: "{\"message\":{\"from_email\":\"sender@host.tld\",\"from_name\":\"Sender Host\",\"to\":[{\"email\":\"lucky@receiver.tld\"}],\"subject\":\"Plain text e-mail\",\"tags\":[\"some_tag\"],\"headers\":{\"some_header\":\"some_header_value\",\"reply-to\":\"reply@to.tld\"},\"text\":\"Here goes the text.\",\"html\":\"Here goes the html.\"},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}").
-          to_return(status: 200, body: "{\"status\":\"sent\"}", headers: {})
+      stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send.json").
+        with(:body => "{\"message\":{\"from_email\":\"some@sender.tld\",\"to\":[{\"email\":\"luck@receiver.tld\",\"type\":\"to\"}],\"subject\":\"only html mail\"},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}",
+             :headers => {'Content-Type'=>'application/json', 'Host'=>'mandrillapp.com:443', 'User-Agent'=>'excon/0.43.0'}).
+        to_return(:status => 200, :body => {status:"sent"}.to_json, :headers => {})
 
-        result = client.deliver(mail)
-        assert_instance_of Hash, result
-        assert_equal "sent", result["status"]
-      end
+      result = client.deliver(mail)
+      assert_instance_of Hash, result
+      assert_equal "sent", result["status"]
     end
 
-    describe "plain text e-mail" do
-      before do
-        mail.expect :subject,    "Cozy e-mail"
-        mail.expect :multipart?, false
+    it "sends the proper API call for multipart text/html e-mails" do
+      mail = Mail.new do
+        from    "some@sender.tld"
+        to      "lucky@receiver.tld"
+        subject "Wow, a multipart text and html msg"
+        text_part do
+          body "This is plain text."
+        end
+        html_part do
+          content_type "text/html; charset=UTF-8"
+          body "<html><head></head><body>blaat</body></html>"
+        end
       end
 
-      it "makes proper API call" do
-        mail.expect :to, "some@email.tld"
+      stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send.json").
+        with(:body => "{\"message\":{\"from_email\":\"some@sender.tld\",\"to\":[{\"email\":\"lucky@receiver.tld\",\"type\":\"to\"}],\"subject\":\"Wow, a multipart text and html msg\",\"text\":\"This is plain text.\",\"html\":\"<html><head></head><body>blaat</body></html>\"},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}",
+             :headers => {'Content-Type'=>'application/json', 'Host'=>'mandrillapp.com:443', 'User-Agent'=>'excon/0.43.0'}).
+        to_return(:status => 200, :body => {status: "sent"}.to_json, :headers => {})
 
-        stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send.json").
-          with(body: "{\"message\":{\"from_email\":\"sender@host.tld\",\"from_name\":\"Sender Host\",\"to\":[{\"email\":\"lucky@receiver.tld\"}],\"subject\":\"Cozy e-mail\",\"tags\":[\"some_tag\"],\"headers\":{\"some_header\":\"some_header_value\",\"reply-to\":\"reply@to.tld\"},\"text\":\"mail body\"},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}").
-          to_return(status: 200, body: "{\"status\":\"sent\"}", headers: {})
-
-        result = client.deliver(mail)
-        assert_instance_of Hash, result
-        assert_equal "sent", result["status"]
-      end
+      result = client.deliver(mail)
+      assert_instance_of Hash, result
+      assert_equal "sent", result["status"]
     end
 
   end
