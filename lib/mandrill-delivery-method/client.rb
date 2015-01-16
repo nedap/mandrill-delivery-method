@@ -8,10 +8,10 @@ module MandrillDeliveryMethod
     end
 
     def deliver mail
-      raise "Missing recipient" if mail.to.blank?
+      raise "Missing recipient" if mail['to'].blank?
 
       mail.ready_to_send!
-      message_hash = mail_to_message_hash(mail).merge(text_and_html_parts(mail))
+      message_hash = mail_to_message_hash(mail)
       message_hash['subaccount'] = @settings.delete(:subaccount) if @settings[:subaccount]
 
       @mandrill.messages.send(message_hash)
@@ -30,18 +30,14 @@ module MandrillDeliveryMethod
         'tags'       => Array(mail['tag'].to_s).delete_if(&:empty?),
         'headers'    => delete_blank_fields(mail.headers.merge({
           'reply-to' => mail['reply_to'].to_s
-        }))
-      })
-    end
-
-    def text_and_html_parts mail
-      delete_blank_fields({
-        text: text_part(mail),
-        html: html_part(mail)
+        })),
+        'text'       => text_part(mail),
+        'html'       => html_part(mail)
       })
     end
 
     def is_text? mail
+      return mail.text? if mail.respond_to?(:text?)
       mail.has_content_type? ? !!(mail.main_type =~ /^text$/i) : false
     end
 
@@ -55,7 +51,7 @@ module MandrillDeliveryMethod
       elsif is_text?(mail) && !is_html?(mail)
         mail.decoded
       elsif !is_html?(mail)
-        mail.text_part.decoded
+        mail.body.decoded
       end
     end
 
