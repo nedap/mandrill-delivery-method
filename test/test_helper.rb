@@ -4,6 +4,7 @@ CodeClimate::TestReporter.configuration.git_dir = "."
 
 require_relative '../lib/mandrill-delivery-method'
 require 'rails/all'
+require 'mail'
 require 'minitest/autorun'
 require 'minitest/pride'
 require 'minitest/mock'
