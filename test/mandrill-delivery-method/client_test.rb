@@ -88,6 +88,34 @@ describe MandrillDeliveryMethod::Client do
       assert_equal "sent", result["status"]
     end
 
+    it "sends e-mail to multiple recipients" do
+      mail = Mail.new do
+        from "spam@king.tld"
+        to "one@receiver.tld, two@receiver.tld, I am Three <three@receiver.tld>"
+        cc "cc-monkey@another-receiver.tld"
+        bcc "ghost@hipness.tld, You Can't See Me <invisible@blahblah.tld>"
+        subject "you might know who's receiving this"
+        text_part do
+          body "blah"
+        end
+        html_part do
+          content_type "text/html; charset=UTF-8"
+          body "<html><head></head><body>more blah</body></html>"
+        end
+      end.tap do |mail|
+        mail['tag'] = "full_blown_email"
+      end
+
+      stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send.json").
+        with(:body => "{\"message\":{\"from_email\":\"spam@king.tld\",\"to\":[{\"email\":\"one@receiver.tld\",\"type\":\"to\"},{\"email\":\"two@receiver.tld\",\"type\":\"to\"},{\"email\":\"three@receiver.tld\",\"name\":\"I am Three\",\"type\":\"to\"},{\"email\":\"cc-monkey@another-receiver.tld\",\"type\":\"cc\"},{\"email\":\"ghost@hipness.tld\",\"type\":\"bcc\"},{\"email\":\"invisible@blahblah.tld\",\"name\":\"You Can't See Me\",\"type\":\"bcc\"}],\"subject\":\"you might know who's receiving this\",\"tags\":[\"full_blown_email\"],\"text\":\"blah\",\"html\":\"<html><head></head><body>more blah</body></html>\"},\"async\":false,\"ip_pool\":null,\"send_at\":null,\"key\":\"apikey\"}",
+             :headers => {'Content-Type'=>'application/json', 'Host'=>'mandrillapp.com:443', 'User-Agent'=>'excon/0.43.0'}).
+        to_return(:status => 200, :body => {status:"sent"}.to_json, :headers => {})
+
+      result = client.deliver(mail)
+      assert_instance_of Hash, result
+      assert_equal "sent", result["status"]
+    end
+
   end
 
 end
