@@ -1,4 +1,4 @@
-# mandrill-delivery-method [![Build Status](https://magnum.travis-ci.com/nedap/mandrill-delivery-method.svg?token=xp5ywq16hRcpzRui8vVa&branch=master)](https://magnum.travis-ci.com/nedap/mandrill-delivery-method) [![Code Climate](https://codeclimate.com/repos/54b6705fe30ba0704d01d967/badges/8f71d0bf9c5d29014cf6/gpa.svg)](https://codeclimate.com/repos/54b6705fe30ba0704d01d967/feed) [![Test Coverage](https://codeclimate.com/repos/54b6705fe30ba0704d01d967/badges/8f71d0bf9c5d29014cf6/coverage.svg)](https://codeclimate.com/repos/54b6705fe30ba0704d01d967/feed)
+# mandrill-delivery-method [![Build Status](https://travis-ci.org/nedap/mandrill-delivery-method.svg)](https://travis-ci.org/nedap/mandrill-delivery-method) [![Code Climate](https://codeclimate.com/repos/54b6705fe30ba0704d01d967/badges/8f71d0bf9c5d29014cf6/gpa.svg)](https://codeclimate.com/repos/54b6705fe30ba0704d01d967/feed) [![Test Coverage](https://codeclimate.com/repos/54b6705fe30ba0704d01d967/badges/8f71d0bf9c5d29014cf6/coverage.svg)](https://codeclimate.com/repos/54b6705fe30ba0704d01d967/feed)
 Adds Mandrill as a `delivery_method` for ActionMailer. Depends on Rails.
 
 # Features
